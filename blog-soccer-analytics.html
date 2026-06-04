@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soccer Analytics Platform — Problem Statement | Lucas Linder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #000; --surface: #0a0a0a; --border: #1c1c1c;
+      --accent: #9BCDEE; --text: #f0f0f0; --muted: #8a8a8a;
+      --mono: 'Fragment Mono', monospace; --sans: 'Syne', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(155,205,238,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(155,205,238,0.018) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 4rem;
+      background: rgba(0,0,0,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; }
+    .nav-logo svg { width: 36px; height: 36px; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s; position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -3px; left: 0; right: 0;
+      height: 1px; background: var(--accent); transform: scaleX(0);
+      transform-origin: left; transition: transform 0.25s ease;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+    /* Hamburger */
+    .hamburger {
+      display: none; flex-direction: column; justify-content: center;
+      gap: 5px; width: 36px; height: 36px; cursor: pointer;
+      background: none; border: none; padding: 0; z-index: 200;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 1.5px; background: var(--text);
+      transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease; transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+    .mobile-menu {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97);
+      backdrop-filter: blur(16px); z-index: 150; flex-direction: column;
+      align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+    }
+    .mobile-menu.open { display: flex; opacity: 1; }
+    .mobile-menu a {
+      font-family: var(--sans); font-weight: 800; font-size: 2.5rem;
+      letter-spacing: -0.02em; color: var(--muted); text-decoration: none;
+      padding: 1rem 0; transition: color 0.2s; border-bottom: 1px solid var(--border);
+      width: 70%; text-align: center;
+    }
+    .mobile-menu a:first-child { border-top: 1px solid var(--border); }
+    .mobile-menu a:hover { color: var(--accent); }
+    /* ARTICLE */
+    .article-wrap {
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+    }
+    /* Back link */
+    .back {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s; margin-bottom: 3rem;
+      opacity: 0; animation: fadeUp 0.5s 0.1s forwards;
+    }
+    .back:hover { color: var(--accent); }
+    .back svg { width: 13px; height: 13px; }
+    /* Post header */
+    .post-eyebrow {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      opacity: 0; animation: fadeUp 0.5s 0.2s forwards;
+    }
+    .post-cat {
+      font-family: var(--mono); font-size: 0.62rem;
+      padding: 0.2rem 0.65rem;
+      border: 1px solid rgba(155,205,238,0.35);
+      color: var(--accent); background: rgba(155,205,238,0.06);
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .post-date-label {
+      font-family: var(--mono); font-size: 0.65rem;
+      color: var(--muted); letter-spacing: 0.1em;
+    }
+    .post-num-label {
+      font-family: var(--mono); font-size: 0.65rem;
+      color: var(--border); letter-spacing: 0.1em;
+    }
+    .article-title {
+      font-family: var(--sans); font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: -0.03em; line-height: 1.05;
+      margin-bottom: 1rem;
+      opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+    }
+    .article-sub {
+      font-family: var(--mono); font-size: 0.85rem;
+      color: var(--muted); line-height: 1.8; margin-bottom: 2.5rem;
+      opacity: 0; animation: fadeUp 0.5s 0.4s forwards;
+    }
+    .article-divider {
+      width: 48px; height: 2px; background: var(--accent);
+      margin-bottom: 3rem;
+      opacity: 0; animation: fadeUp 0.5s 0.45s forwards;
+    }
+    /* Body content */
+    .article-body {
+      opacity: 0; animation: fadeUp 0.6s 0.5s forwards;
+    }
+    .article-body h2 {
+      font-family: var(--sans); font-weight: 800;
+      font-size: 1.4rem; letter-spacing: -0.02em;
+      margin: 2.5rem 0 1rem; color: var(--text);
+    }
+    .article-body h3 {
+      font-family: var(--sans); font-weight: 700;
+      font-size: 1.05rem; letter-spacing: -0.01em;
+      margin: 2rem 0 0.75rem; color: var(--text);
+    }
+    .article-body p {
+      font-family: var(--mono); font-size: 0.85rem;
+      color: var(--muted); line-height: 1.9; margin-bottom: 1.25rem;
+    }
+    .article-body strong { color: var(--text); font-weight: 400; }
+    .article-body em { color: var(--accent); font-style: normal; }
+    .article-body ul, .article-body ol {
+      margin: 1rem 0 1.5rem 1.5rem;
+    }
+    .article-body li {
+      font-family: var(--mono); font-size: 0.83rem;
+      color: var(--muted); line-height: 1.8; margin-bottom: 0.4rem;
+    }
+    .article-body li strong { color: var(--text); }
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(155,205,238,0.04);
+      padding: 1.25rem 1.5rem;
+      margin: 2rem 0;
+    }
+    .callout p { margin-bottom: 0; }
+    .article-body code {
+      font-family: var(--mono); font-size: 0.8rem;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 0.15rem 0.45rem; color: var(--accent);
+    }
+    /* Footer nav */
+    .post-footer {
+      margin-top: 5rem; padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .post-footer a {
+      font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase;
+      display: inline-flex; align-items: center; gap: 0.5rem; transition: color 0.2s;
+    }
+    .post-footer a:hover { color: var(--accent); }
+    .post-footer a svg { width: 13px; height: 13px; }
+    .post-footer-next { text-align: right; }
+    /* Responsive */
+    @media (max-width: 900px) { nav { padding: 1.25rem 2rem; } }
+    @media (max-width: 600px) { .nav-links { display: none; } .hamburger { display: flex; } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4 L4 34 L8 34" stroke="#9BCDEE" stroke-width="1.5" stroke-linecap="square" fill="none"/>
+        <path d="M34 4 L34 34 L30 34" stroke="#9BCDEE" stroke-width="1.5" stroke-linecap="square" fill="none"/>
+        <line x1="10" y1="9" x2="10" y2="26" stroke="#9BCDEE" stroke-width="2" stroke-linecap="round"/>
+        <line x1="10" y1="26" x2="18" y2="26" stroke="#9BCDEE" stroke-width="2" stroke-linecap="round"/>
+        <line x1="20" y1="9" x2="20" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="20" y1="26" x2="28" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#blog">Blog</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html#about" class="mobile-link">About</a>
+    <a href="index.html#projects" class="mobile-link">Projects</a>
+    <a href="index.html#blog" class="mobile-link">Blog</a>
+    <a href="index.html#contact" class="mobile-link">Contact</a>
+  </div>
+
+  <div class="article-wrap">
+    <a href="index.html#blog" class="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Blog
+    </a>
+
+    <div class="post-eyebrow">
+      <span class="post-num-label">001</span>
+      <span class="post-cat">Devlog</span>
+      <span class="post-date-label">Summer 2026</span>
+    </div>
+
+    <h1 class="article-title">Soccer Analytics Platform Project Announcment</h1>
+    <p class="article-sub">Why I'm building this, who it's for, and what problem it actually solves.</p>
+    <div class="article-divider"></div>
+
+    <div class="article-body">
+
+      <h2>The Problem</h2>
+      <p>
+        I've been playing soccer competitively for most of my life. This past year I got pulled up to Varsity and took on a captain role on my ECNL-RL team. And one thing I kept running into, both as a player and as someone watching my team, is that we make almost every decision by feel.
+      </p>
+      <p>
+        <em>Where are we losing the ball most?</em> <br>
+        <em>Which players are making the right runs?</em> <br>
+        <em>Are we pressing effectively in the second half?</em> <br>
+      </p>
+      <p>
+        Professional clubs have fixed this. FC Barcelona has an entire data science team. StatsBomb sells detailed event data to clubs at every level. But that infrastructure doesn't exist for high school and club soccer, and coaches don't have time to build it themselves.
+      </p>
+
+      <div class="callout">
+        <p><strong>The gap I'm targeting:</strong> There's no lightweight, easy-to-use analytics tool built specifically for club and high school soccer teams. Something a coach could actually use without a data science background.</p>
+      </div>
+
+      <h2>Who Is This For?</h2>
+      <p>
+        The first real user is my coach. That's intentional. If I can build something my own coach finds useful — someone who has coached at this level for years and has real opinions about what matters — then I've actually solved the problem.
+      </p>
+      <p>Secondary users:</p>
+      <ul>
+        <li><strong>Players</strong> who want to understand their own performance beyond what a coach tells them.</li>
+        <li><strong>Club teams</strong> at the ECNL and regional level who want data without paying for enterprise software.</li>
+        <li><strong>Coaches</strong> at the high school level who have no data infrastructure at all.</li>
+      </ul>
+
+      <h2>What Does v0.1 Do?</h2>
+      <p>
+        One feature. That's the rule I'm setting for myself. Scope creep is how side projects die.
+      </p>
+      <p>
+        v0.1 will do <em>one thing well</em>: take manually entered game data (shots, locations, outcomes) and generate a visual shot map for a single match. That's it.
+      </p>
+      <ul>
+        <li>Input: a CSV or simple form with shot data (player, minute, location on pitch, outcome)</li>
+        <li>Output: a visual plot of the pitch with shots overlaid, colored by outcome</li>
+        <li>Stack: Python (<code>matplotlib</code> for the viz, <code>pandas</code> for data handling)</li>
+        <li>Delivery: runs locally, outputs a PNG — no web app yet</li>
+      </ul>
+
+      <h2>Why Start Here?</h2>
+      <p>
+        Shot maps are the entry point to soccer analytics for a reason — they're immediately readable by anyone who watches soccer. A coach doesn't need to understand expected goals or progressive passes to look at a shot map and say <em>"we're taking too many shots from outside the box."</em>
+      </p>
+      <p>
+        Starting here also lets me learn the data pipeline end-to-end before adding complexity. Once I can reliably go from raw input → clean data → visual output, everything else is building on top of that foundation.
+      </p>
+
+      <h2>What's Next</h2>
+      <p>
+        After v0.1 ships to GitHub, I'll show it to my coach and get real feedback. That feedback shapes v0.2 — whatever they say is missing is what I build next. The platform grows from actual use, not from what I think would be cool to build.
+      </p>
+      <p>
+        The longer-term vision is a full match analytics dashboard — possession maps, pressing intensity, player heatmaps — but I'm not building any of that until v0.1 is in someone's hands.
+      </p>
+
+      <div class="callout">
+        <p><strong>The one-sentence version:</strong> I raised my team's performance awareness with my eyes and instincts for years. Now I'm building the tool I always wished we had.</p>
+      </div>
+
+    </div>
+
+    <!-- 
+    <div class="post-footer">
+      <a href="index.html#blog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        All Posts
+      </a>
+      <a href="blog-v01-devlog.html" class="post-footer-next">
+        Next: v0.1 Devlog
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div> -->
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+</body>
+</html>

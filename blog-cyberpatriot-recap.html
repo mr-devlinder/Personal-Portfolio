@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberPatriot Season Recap | Lucas Linder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #000; --surface: #0a0a0a; --border: #1c1c1c;
+      --accent: #9BCDEE; --text: #f0f0f0; --muted: #8a8a8a;
+      --mono: 'Fragment Mono', monospace; --sans: 'Syne', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(155,205,238,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(155,205,238,0.018) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 4rem;
+      background: rgba(0,0,0,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; }
+    .nav-logo svg { width: 36px; height: 36px; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s; position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -3px; left: 0; right: 0;
+      height: 1px; background: var(--accent); transform: scaleX(0);
+      transform-origin: left; transition: transform 0.25s ease;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+    .hamburger {
+      display: none; flex-direction: column; justify-content: center;
+      gap: 5px; width: 36px; height: 36px; cursor: pointer;
+      background: none; border: none; padding: 0; z-index: 200;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 1.5px; background: var(--text);
+      transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease; transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+    .mobile-menu {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97);
+      backdrop-filter: blur(16px); z-index: 150; flex-direction: column;
+      align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+    }
+    .mobile-menu.open { display: flex; opacity: 1; }
+    .mobile-menu a {
+      font-family: var(--sans); font-weight: 800; font-size: 2.5rem;
+      letter-spacing: -0.02em; color: var(--muted); text-decoration: none;
+      padding: 1rem 0; transition: color 0.2s; border-bottom: 1px solid var(--border);
+      width: 70%; text-align: center;
+    }
+    .mobile-menu a:first-child { border-top: 1px solid var(--border); }
+    .mobile-menu a:hover { color: var(--accent); }
+    .article-wrap {
+      position: relative; z-index: 1; max-width: 720px; margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+    }
+    .back {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s; margin-bottom: 3rem;
+      opacity: 0; animation: fadeUp 0.5s 0.1s forwards;
+    }
+    .back:hover { color: var(--accent); }
+    .back svg { width: 13px; height: 13px; }
+    .post-eyebrow {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem; opacity: 0; animation: fadeUp 0.5s 0.2s forwards;
+    }
+    .post-cat {
+      font-family: var(--mono); font-size: 0.62rem; padding: 0.2rem 0.65rem;
+      border: 1px solid rgba(155,205,238,0.35); color: var(--accent);
+      background: rgba(155,205,238,0.06); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .post-date-label { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+    .post-num-label { font-family: var(--mono); font-size: 0.65rem; color: var(--border); letter-spacing: 0.1em; }
+    .article-title {
+      font-family: var(--sans); font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.03em; line-height: 1.05;
+      margin-bottom: 1rem; opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+    }
+    .article-sub {
+      font-family: var(--mono); font-size: 0.85rem; color: var(--muted);
+      line-height: 1.8; margin-bottom: 2.5rem; opacity: 0; animation: fadeUp 0.5s 0.4s forwards;
+    }
+    .article-divider { width: 48px; height: 2px; background: var(--accent); margin-bottom: 3rem; opacity: 0; animation: fadeUp 0.5s 0.45s forwards; }
+    .article-body { opacity: 0; animation: fadeUp 0.6s 0.5s forwards; }
+    .article-body h2 { font-family: var(--sans); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; margin: 2.5rem 0 1rem; color: var(--text); }
+    .article-body h3 { font-family: var(--sans); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; margin: 2rem 0 0.75rem; color: var(--text); }
+    .article-body p { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); line-height: 1.9; margin-bottom: 1.25rem; }
+    .article-body strong { color: var(--text); font-weight: 400; }
+    .article-body em { color: var(--accent); font-style: normal; }
+    .article-body ul, .article-body ol { margin: 1rem 0 1.5rem 1.5rem; }
+    .article-body li { font-family: var(--mono); font-size: 0.83rem; color: var(--muted); line-height: 1.8; margin-bottom: 0.4rem; }
+    .article-body li strong { color: var(--text); }
+    .callout { border-left: 3px solid var(--accent); background: rgba(155,205,238,0.04); padding: 1.25rem 1.5rem; margin: 2rem 0; }
+    .callout p { margin-bottom: 0; }
+    .article-body code { font-family: var(--mono); font-size: 0.8rem; background: var(--surface); border: 1px solid var(--border); padding: 0.15rem 0.45rem; color: var(--accent); }
+    .stat-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border); border: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+    .stat-cell { background: var(--surface); padding: 1.5rem; }
+    .stat-cell .num { font-family: var(--sans); font-weight: 800; font-size: 2rem; color: var(--accent); letter-spacing: -0.02em; line-height: 1; margin-bottom: 0.3rem; }
+    .stat-cell .label { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .post-footer {
+      margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .post-footer a { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.5rem; transition: color 0.2s; }
+    .post-footer a:hover { color: var(--accent); }
+    .post-footer a svg { width: 13px; height: 13px; }
+    @media (max-width: 900px) { nav { padding: 1.25rem 2rem; } .stat-row { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .nav-links { display: none; } .hamburger { display: flex; } .stat-row { grid-template-columns: 1fr; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4 L4 34 L8 34" stroke="#9BCDEE" stroke-width="1.5" stroke-linecap="square" fill="none"/>
+        <path d="M34 4 L34 34 L30 34" stroke="#9BCDEE" stroke-width="1.5" stroke-linecap="square" fill="none"/>
+        <line x1="10" y1="9" x2="10" y2="26" stroke="#9BCDEE" stroke-width="2" stroke-linecap="round"/>
+        <line x1="10" y1="26" x2="18" y2="26" stroke="#9BCDEE" stroke-width="2" stroke-linecap="round"/>
+        <line x1="20" y1="9" x2="20" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="20" y1="26" x2="28" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#blog">Blog</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html#about" class="mobile-link">About</a>
+    <a href="index.html#projects" class="mobile-link">Projects</a>
+    <a href="index.html#blog" class="mobile-link">Blog</a>
+    <a href="index.html#contact" class="mobile-link">Contact</a>
+  </div>
+
+  <div class="article-wrap">
+    <a href="index.html#blog" class="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Blog
+    </a>
+
+    <div class="post-eyebrow">
+      <span class="post-num-label">003</span>
+      <span class="post-cat">Cybersecurity</span>
+      <span class="post-date-label">Fall 2026</span>
+    </div>
+
+    <h1 class="article-title">CyberPatriot Season Recap</h1>
+    <p class="article-sub">Our team's approach, what we defended, where we fell short, and what I'd do differently.</p>
+    <div class="article-divider"></div>
+
+    <div class="article-body">
+
+      <h2>What Is CyberPatriot?</h2>
+      <p>
+        CyberPatriot is the national high school cybersecurity competition run by the Air Force Association. Teams are given virtual machines running Windows and Linux that have been deliberately misconfigured with security vulnerabilities. Your job is to find and fix as many as possible within a timed window — while keeping required services running.
+      </p>
+      <p>
+        It's scored automatically. Every vulnerability you patch scores points. Every required service you accidentally break loses points. The pressure is real.
+      </p>
+
+      <div class="stat-row">
+        <div class="stat-cell"><div class="num">4</div><div class="label">Team Members</div></div>
+        <div class="stat-cell"><div class="num">3</div><div class="label">Rounds Competed</div></div>
+        <div class="stat-cell"><div class="num">Gold</div><div class="label">Tier Reached</div></div>
+      </div>
+
+      <h2>Our Approach</h2>
+      <p>
+        Going in, we divided responsibilities by OS. I took Linux — specifically Ubuntu — because I'd been working through OverTheWire Bandit and felt more comfortable there than on Windows Server. Two teammates handled Windows 10 and Windows Server. The fourth handled Cisco networking.
+      </p>
+      <p>
+        Our checklist for each machine hit the same categories in the same order every round:
+      </p>
+      <ul>
+        <li><strong>User account audit</strong> — remove unauthorized users, disable guest accounts, enforce password policies</li>
+        <li><strong>Services and processes</strong> — kill anything that shouldn't be running (Telnet, FTP if not required, etc.)</li>
+        <li><strong>Software</strong> — remove prohibited software listed in the scenario README</li>
+        <li><strong>Updates</strong> — run system updates where allowed</li>
+        <li><strong>Firewall</strong> — enable and configure, allow only required ports</li>
+        <li><strong>File permissions</strong> — fix world-writable files, check sudoers</li>
+        <li><strong>Forensics questions</strong> — answer the scenario-specific questions for bonus points</li>
+      </ul>
+
+      <h2>What We Got Right</h2>
+      <p>
+        The checklist approach worked. Having a repeatable process meant we didn't miss obvious things under time pressure. In Round 1 we scored consistently on user audits and services — the stuff that's always there regardless of the specific scenario.
+      </p>
+      <p>
+        Dividing by OS was also the right call. Context switching between Linux and Windows in a 6-hour window is slow. Owning one system deeply is faster than knowing two systems shallowly.
+      </p>
+
+      <h2>Where We Fell Short</h2>
+      <p>
+        <em>Forensics questions.</em> These are scenario-specific and require actually reading the README carefully. We rushed this in Round 2 and left points on the table that we should have gotten — the answers were there, we just didn't look.
+      </p>
+      <p>
+        <em>Service breakage.</em> In Round 3, I hardened SSH too aggressively and briefly broke remote access. Caught it before the scoring window closed, but it cost time. The lesson: always verify required services are still functional after making changes.
+      </p>
+
+      <div class="callout">
+        <p><strong>The thing nobody tells you:</strong> CyberPatriot is as much a time management competition as a technical one. Knowing what to fix is table stakes. Knowing what order to fix things in — and when to stop and move to the next machine — is what separates Gold from Platinum.</p>
+      </div>
+
+      <h2>What I'd Do Differently</h2>
+      <ul>
+        <li><strong>Practice with real scored images before Round 1.</strong> We used practice images but didn't simulate the time pressure well. Next year we're doing full timed mock rounds.</li>
+        <li><strong>Assign a dedicated forensics reader.</strong> One person reads the scenario README thoroughly and owns the forensics questions. They don't touch the machines until the questions are answered.</li>
+        <li><strong>Build a personal Linux hardening script.</strong> The same fixes show up every year. A script that applies safe, non-service-breaking hardening automatically could save 20–30 minutes per round.</li>
+      </ul>
+
+      <h2>Next Year</h2>
+      <p>
+        Target: <em>Platinum tier</em>. That means tighter execution, better forensics, and not leaving any easy points behind. I'm starting OverTheWire Natas over winter break to sharpen web-specific thinking, and I'll build that Linux hardening script before September.
+      </p>
+      <p>
+        If you're thinking about competing and you're on the fence — do it. The pressure of a real scored environment teaches you things that no tutorial can.
+      </p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="blog-v01-devlog.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Prev: v0.1 Devlog
+      </a>
+      <a href="index.html#blog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        All Posts
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+</body>
+</html>

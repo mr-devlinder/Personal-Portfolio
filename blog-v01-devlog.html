@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>v0.1 Devlog — First Working Prototype | Lucas Linder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #000; --surface: #0a0a0a; --border: #1c1c1c;
+      --accent: #9BCDEE; --text: #f0f0f0; --muted: #8a8a8a;
+      --mono: 'Fragment Mono', monospace; --sans: 'Syne', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(155,205,238,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(155,205,238,0.018) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 4rem;
+      background: rgba(0,0,0,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; }
+    .nav-logo svg { width: 36px; height: 36px; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s; position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -3px; left: 0; right: 0;
+      height: 1px; background: var(--accent); transform: scaleX(0);
+      transform-origin: left; transition: transform 0.25s ease;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+    .hamburger {
+      display: none; flex-direction: column; justify-content: center;
+      gap: 5px; width: 36px; height: 36px; cursor: pointer;
+      background: none; border: none; padding: 0; z-index: 200;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 1.5px; background: var(--text);
+      transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease; transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+    .mobile-menu {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97);
+      backdrop-filter: blur(16px); z-index: 150; flex-direction: column;
+      align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+    }
+    .mobile-menu.open { display: flex; opacity: 1; }
+    .mobile-menu a {
+      font-family: var(--sans); font-weight: 800; font-size: 2.5rem;
+      letter-spacing: -0.02em; color: var(--muted); text-decoration: none;
+      padding: 1rem 0; transition: color 0.2s; border-bottom: 1px solid var(--border);
+      width: 70%; text-align: center;
+    }
+    .mobile-menu a:first-child { border-top: 1px solid var(--border); }
+    .mobile-menu a:hover { color: var(--accent); }
+    .article-wrap {
+      position: relative; z-index: 1; max-width: 720px; margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+    }
+    .back {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s; margin-bottom: 3rem;
+      opacity: 0; animation: fadeUp 0.5s 0.1s forwards;
+    }
+    .back:hover { color: var(--accent); }
+    .back svg { width: 13px; height: 13px; }
+    .post-eyebrow {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem; opacity: 0; animation: fadeUp 0.5s 0.2s forwards;
+    }
+    .post-cat {
+      font-family: var(--mono); font-size: 0.62rem; padding: 0.2rem 0.65rem;
+      border: 1px solid rgba(155,205,238,0.35); color: var(--accent);
+      background: rgba(155,205,238,0.06); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .post-date-label { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+    .post-num-label { font-family: var(--mono); font-size: 0.65rem; color: var(--border); letter-spacing: 0.1em; }
+    .article-title {
+      font-family: var(--sans); font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.03em; line-height: 1.05;
+      margin-bottom: 1rem; opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+    }
+    .article-sub {
+      font-family: var(--mono); font-size: 0.85rem; color: var(--muted);
+      line-height: 1.8; margin-bottom: 2.5rem; opacity: 0; animation: fadeUp 0.5s 0.4s forwards;
+    }
+    .article-divider { width: 48px; height: 2px; background: var(--accent); margin-bottom: 3rem; opacity: 0; animation: fadeUp 0.5s 0.45s forwards; }
+    .article-body { opacity: 0; animation: fadeUp 0.6s 0.5s forwards; }
+    .article-body h2 { font-family: var(--sans); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; margin: 2.5rem 0 1rem; color: var(--text); }
+    .article-body h3 { font-family: var(--sans); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; margin: 2rem 0 0.75rem; color: var(--text); }
+    .article-body p { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); line-height: 1.9; margin-bottom: 1.25rem; }
+    .article-body strong { color: var(--text); font-weight: 400; }
+    .article-body em { color: var(--accent); font-style: normal; }
+    .article-body ul, .article-body ol { margin: 1rem 0 1.5rem 1.5rem; }
+    .article-body li { font-family: var(--mono); font-size: 0.83rem; color: var(--muted); line-height: 1.8; margin-bottom: 0.4rem; }
+    .article-body li strong { color: var(--text); }
+    .callout { border-left: 3px solid var(--accent); background: rgba(155,205,238,0.04); padding: 1.25rem 1.5rem; margin: 2rem 0; }
+    .callout p { margin-bottom: 0; }
+    .code-block {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 1.25rem 1.5rem; margin: 1.5rem 0; overflow-x: auto;
+    }
+    .code-block pre { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); line-height: 1.7; white-space: pre; }
+    .code-block pre .kw { color: var(--accent); }
+    .code-block pre .cm { color: #555; }
+    .article-body code { font-family: var(--mono); font-size: 0.8rem; background: var(--surface); border: 1px solid var(--border); padding: 0.15rem 0.45rem; color: var(--accent); }
+    .post-footer {
+      margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .post-footer a { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.5rem; transition: color 0.2s; }
+    .post-footer a:hover { color: var(--accent); }
+    .post-footer a svg { width: 13px; height: 13px; }
+    .post-footer-next { text-align: right; }
+    @media (max-width: 900px) { nav { padding: 1.25rem 2rem; } }
+    @media (max-width: 600px) { .nav-links { display: none; } .hamburger { display: flex; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4 L4 34 L8 34" stroke="#9BCDEE" stroke-width="1.5" stroke-linecap="square" fill="none"/>
+        <path d="M34 4 L34 34 L30 34" stroke="#9BCDEE" stroke-width="1.5" stroke-linecap="square" fill="none"/>
+        <line x1="10" y1="9" x2="10" y2="26" stroke="#9BCDEE" stroke-width="2" stroke-linecap="round"/>
+        <line x1="10" y1="26" x2="18" y2="26" stroke="#9BCDEE" stroke-width="2" stroke-linecap="round"/>
+        <line x1="20" y1="9" x2="20" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="20" y1="26" x2="28" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#blog">Blog</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html#about" class="mobile-link">About</a>
+    <a href="index.html#projects" class="mobile-link">Projects</a>
+    <a href="index.html#blog" class="mobile-link">Blog</a>
+    <a href="index.html#contact" class="mobile-link">Contact</a>
+  </div>
+
+  <div class="article-wrap">
+    <a href="index.html#blog" class="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Blog
+    </a>
+
+    <div class="post-eyebrow">
+      <span class="post-num-label">002</span>
+      <span class="post-cat">Devlog</span>
+      <span class="post-date-label">Summer 2026</span>
+    </div>
+
+    <h1 class="article-title">v0.1 Devlog — First Working Prototype</h1>
+    <p class="article-sub">Shipping the first prototype to GitHub. What I built, what broke, and what I learned.</p>
+    <div class="article-divider"></div>
+
+    <div class="article-body">
+
+      <h2>The Goal for v0.1</h2>
+      <p>
+        From my <a href="blog-soccer-analytics.html" style="color: var(--accent); text-decoration: none;">problem statement post</a>, I locked in one rule for this version: <em>one feature, working end-to-end</em>. No dashboard, no web app, no fancy UI. Just a Python script that takes shot data and outputs a visual shot map.
+      </p>
+      <p>
+        If I couldn't get that working, nothing else would matter.
+      </p>
+
+      <h2>What I Built</h2>
+      <p>
+        v0.1 is a command-line Python script. You feed it a CSV with shot data — player name, minute, x/y coordinates on the pitch, and outcome (goal, on target, off target, blocked) — and it outputs a PNG shot map using <code>matplotlib</code>.
+      </p>
+
+      <div class="code-block"><pre><span class="cm"># example input: shots.csv</span>
+player,minute,x,y,outcome
+Lucas,12,88,34,goal
+Marcus,27,75,18,off_target
+Javier,44,92,41,on_target
+Lucas,67,81,29,blocked</pre></div>
+
+      <p>
+        The script reads that CSV with <code>pandas</code>, draws a pitch using matplotlib patches (rectangles, circles, arcs), then plots each shot as a colored marker — green for goals, yellow for on target, red for off target, grey for blocked.
+      </p>
+
+      <h2>What Actually Broke</h2>
+      <p>
+        A few things I didn't anticipate:
+      </p>
+      <ul>
+        <li><strong>Coordinate system confusion.</strong> I was plotting x/y from the top-left corner, but soccer pitch coordinates in most data standards put (0,0) at the center. Spent an embarrassing amount of time wondering why all my shots were in the wrong half.</li>
+        <li><strong>Matplotlib's aspect ratio.</strong> A pitch is roughly 105m × 68m. If you don't lock the aspect ratio, it renders as a square and everything looks wrong. Needed <code>ax.set_aspect('equal')</code>.</li>
+        <li><strong>Overlapping markers.</strong> Multiple shots from nearly the same spot stack on top of each other and look like one shot. Didn't fix this in v0.1 — punting it to v0.2 with some jitter or size encoding.</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Lesson learned:</strong> The bugs that take longest aren't the ones where Python throws an error. They're the ones where it runs fine and draws something that looks slightly wrong. Always test with data you already know the answer to.</p>
+      </div>
+
+      <h2>The Code Structure</h2>
+      <p>
+        Kept it as simple as possible for v0.1. Three functions:
+      </p>
+      <ul>
+        <li><strong><code>load_data(filepath)</code></strong> — reads and validates the CSV</li>
+        <li><strong><code>draw_pitch(ax)</code></strong> — draws all pitch markings onto a matplotlib axis</li>
+        <li><strong><code>plot_shots(ax, df)</code></strong> — plots each shot with the right color and marker</li>
+      </ul>
+      <p>
+        Total: about 90 lines including comments. That felt right for a first version.
+      </p>
+
+      <h2>Showing It to My Coach</h2>
+      <p>
+        I ran it on data I manually entered from our last three games and showed my coach the output. His first question: <em>"Can you show me where we're losing the ball in the midfield, not just shots?"</em>
+      </p>
+      <p>
+        That's v0.2.
+      </p>
+      <p>
+        His second question: <em>"Can I enter data on my phone without a spreadsheet?"</em>
+      </p>
+      <p>
+        That's probably v0.4 or v0.5.
+      </p>
+      <p>
+        Both questions were useful. The first told me the right next feature. The second told me where the product eventually needs to go without forcing me to build it before it's needed.
+      </p>
+
+      <h2>What's in v0.2</h2>
+      <p>
+        Based on that feedback, v0.2 will add <em>ball loss tracking</em> — plotting where possession is lost on the pitch, categorized by type (bad pass, tackle won, out of bounds). Same pipeline, different data type, more tactical value.
+      </p>
+      <p>
+        I'm also fixing the overlapping marker problem in v0.2 since it came up when showing the map to my coach — he couldn't tell if a cluster was 2 shots or 6.
+      </p>
+
+      <div class="callout">
+        <p><strong>GitHub:</strong> v0.1 is live at <em>github.com/mr-devlinder</em>. README explains how to run it and what format the CSV needs to be in.</p>
+      </div>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="blog-soccer-analytics.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Prev: Problem Statement
+      </a>
+      <a href="blog-cyberpatriot-recap.html" class="post-footer-next">
+        Next: CyberPatriot Recap
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+</body>
+</html>
